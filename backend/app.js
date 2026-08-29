@@ -8,7 +8,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// M0 healthcheck（下一步實作）
+app.get("/healthcheck", async (req, res) => {
+  await dataSource.query("SELECT 1");
+  res.status(200).type("text/plain").send("OK");
+});
+
 // 路由掛載（後續步驟逐一加入）
 // 404 錯誤
 app.use((req, res, next) => {
