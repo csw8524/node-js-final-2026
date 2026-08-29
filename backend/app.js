@@ -19,6 +19,8 @@ app.use("/api/credit-package", require("./routes/creditPackage"));
 app.use("/api/users", require("./routes/users"));
 app.use("/api/admin/coaches/courses", require("./routes/adminCourses"));
 app.use("/api/admin/coaches", require("./routes/adminCoaches"));
+app.use("/api/coaches", require("./routes/publicCoaches"));
+app.use("/api/courses", require("./routes/courses"));
 
 // 404 錯誤
 app.use((req, res, next) => {
