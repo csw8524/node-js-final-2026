@@ -77,6 +77,63 @@ const usersController = {
       data: { user: { name: req.user.name, email: req.user.email } },
     });
   },
+
+  async putProfile(req, res, next) {
+    const { name } = req.body;
+    if (!isValidString(name)) {
+      return next(appError(400, "欄位未填寫正確"));
+    }
+    if (name.trim() === req.user.name) {
+      return next(appError(400, "使用者名稱未變更"));
+    }
+
+    const userRepo = dataSource.getRepository("User");
+    req.user.name = name.trim();
+    const user = await userRepo.save(req.user);
+
+    res.json({
+      status: "success",
+      data: { user: { name: user.name } },
+    });
+  },
+
+  async putPassword(req, res, next) {
+    const { password, new_password, confirm_new_password } = req.body;
+    if (
+      !isValidString(password) ||
+      !isValidString(new_password) ||
+      !isValidString(confirm_new_password)
+    ) {
+      return next(appError(400, "欄位未填寫正確"));
+    }
+    if (
+      !isValidPassword(password) ||
+      !isValidPassword(new_password) ||
+      !isValidPassword(confirm_new_password)
+    ) {
+      return next(appError(400, PW_ERR));
+    }
+    if (password === new_password) {
+      return next(appError(400, "新密碼不能與舊密碼相同"));
+    }
+    if (new_password !== confirm_new_password) {
+      return next(appError(400, "新密碼與驗證新密碼不一致"));
+    }
+
+    const match = await bcrypt.compare(password, req.user.password);
+    if (!match) {
+      return next(appError(400, "密碼輸入錯誤"));
+    }
+
+    const userRepo = dataSource.getRepository("User");
+    req.user.password = await bcrypt.hash(new_password, 10);
+    await userRepo.save(req.user);
+
+    res.json({
+      status: "success",
+      data: null,
+    });
+  },
 };
 
 module.exports = usersController;
