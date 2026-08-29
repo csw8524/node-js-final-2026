@@ -1,11 +1,11 @@
-const appError = require('../utils/appError');
+const appError = require("../utils/appError");
 
 function isCoach(req, res, next) {
-  if (!req.user || req.user.role !== 'COACH') {
-    return next(appError(401, '使用者尚未成為教練'));
+  if (!req.user || req.user.role !== "COACH") {
+    return next(appError(401, "使用者尚未成為教練"));
   }
 
-  return next();
+  next();
 }
 
 module.exports = isCoach;

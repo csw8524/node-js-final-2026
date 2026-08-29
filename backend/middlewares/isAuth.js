@@ -1,26 +1,31 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+const { dataSource } = require("../db/data-source");
+const config = require("../config/index");
+const appError = require("../utils/appError");
 
-const appError = require('../utils/appError');
-const config = require('../config');
-
-function isAuth(req, res, next) {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return next(appError(401, '請先登入'));
-  }
-
-  const token = authHeader.split(' ')[1];
-
+async function isAuth(req, res, next) {
   try {
-    req.user = jwt.verify(token, config.get('secret.jwtSecret'));
-    return next();
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return next(appError(401, 'Token 已過期'));
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return next(appError(401, "請先登入"));
     }
 
-    return next(appError(401, '無效的 token'));
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, config.get("secret.jwtSecret"));
+
+    const userRepo = dataSource.getRepository("User");
+    const user = await userRepo.findOneBy({ id: decoded.id });
+    if (!user) {
+      return next(appError(401, "無效的 token"));
+    }
+
+    req.user = user;
+    next();
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      return next(appError(401, "Token 已過期"));
+    }
+    return next(appError(401, "無效的 token"));
   }
 }
 

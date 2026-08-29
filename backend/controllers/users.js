@@ -70,6 +70,13 @@ const usersController = {
       data: { token, user: { name: user.name } },
     });
   },
+
+  async getProfile(req, res, next) {
+    res.json({
+      status: "success",
+      data: { user: { name: req.user.name, email: req.user.email } },
+    });
+  },
 };
 
 module.exports = usersController;
