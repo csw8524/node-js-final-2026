@@ -1,9 +1,7 @@
-class AppError extends Error {
-  constructor(statusCode, message) {
-    super(message);
-    this.status = statusCode;
-    this.isOperational = true;
-  }
-}
+const appError = (status, message) => {
+  const error = new Error(message);
+  error.status = status;
+  return error;
+};
 
-module.exports = AppError;
+module.exports = appError;
