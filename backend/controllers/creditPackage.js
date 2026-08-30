@@ -40,6 +40,28 @@ const creditPackageController = {
     res.json({ status: "success", data: creditPackage });
   },
 
+  async buyCreditPackage(req, res, next) {
+    const { creditPackageId } = req.params;
+    const creditPackageRepo = dataSource.getRepository("CreditPackage");
+    const creditPackage = await creditPackageRepo.findOneBy({
+      id: creditPackageId,
+    });
+
+    if (!creditPackage) {
+      return next(appError(400, "ID錯誤"));
+    }
+
+    await dataSource.getRepository("CreditPurchase").save({
+      user_id: req.user.id,
+      credit_package_id: creditPackage.id,
+      name: creditPackage.name,
+      purchased_credits: creditPackage.credit_amount,
+      price_paid: creditPackage.price,
+    });
+
+    res.json({ status: "success", data: null });
+  },
+
   async deleteCreditPackage(req, res, next) {
     try {
       const { creditPackageId } = req.params;

@@ -78,6 +78,74 @@ const usersController = {
     });
   },
 
+  async getCreditPackages(req, res, next) {
+    const purchases = await dataSource.getRepository("CreditPurchase").find({
+      where: { user_id: req.user.id },
+      select: {
+        name: true,
+        purchased_credits: true,
+        price_paid: true,
+        purchase_at: true,
+      },
+      order: { purchase_at: "DESC" },
+    });
+
+    res.json({
+      status: "success",
+      data: purchases.map((purchase) => ({
+        name: purchase.name,
+        purchased_credits: purchase.purchased_credits,
+        price_paid: purchase.price_paid,
+        purchase_at: purchase.purchase_at,
+      })),
+    });
+  },
+
+  async getCourses(req, res, next) {
+    const purchaseResult = await dataSource
+      .getRepository("CreditPurchase")
+      .createQueryBuilder("purchase")
+      .select("COALESCE(SUM(purchase.purchased_credits), 0)", "total")
+      .where("purchase.user_id = :userId", { userId: req.user.id })
+      .getRawOne();
+
+    const bookingResult = await dataSource
+      .getRepository("CourseBooking")
+      .createQueryBuilder("booking")
+      .select("COUNT(booking.id)", "total")
+      .where("booking.user_id = :userId", { userId: req.user.id })
+      .andWhere("booking.cancelled_at IS NULL")
+      .getRawOne();
+
+    const totalCredits = Number(purchaseResult.total);
+    const creditUsage = Number(bookingResult.total);
+
+    const courseBooking = await dataSource
+      .getRepository("CourseBooking")
+      .createQueryBuilder("booking")
+      .leftJoin("courses", "course", "course.id = booking.course_id")
+      .leftJoin("users", "coach_user", "coach_user.id = course.user_id")
+      .select("course.id", "course_id")
+      .addSelect("course.name", "name")
+      .addSelect("course.start_at", "start_at")
+      .addSelect("course.end_at", "end_at")
+      .addSelect("course.meeting_url", "meeting_url")
+      .addSelect("coach_user.name", "coach_name")
+      .addSelect("booking.cancelled_at", "cancelled_at")
+      .where("booking.user_id = :userId", { userId: req.user.id })
+      .orderBy("course.start_at", "ASC")
+      .getRawMany();
+
+    res.json({
+      status: "success",
+      data: {
+        credit_remain: totalCredits - creditUsage,
+        credit_usage: creditUsage,
+        course_booking: courseBooking,
+      },
+    });
+  },
+
   async putProfile(req, res, next) {
     const { name } = req.body;
     if (!isValidString(name)) {
