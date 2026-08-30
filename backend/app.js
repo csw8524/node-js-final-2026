@@ -18,6 +18,7 @@ app.use("/api/coaches/skill", require("./routes/skill"));
 app.use("/api/credit-package", require("./routes/creditPackage"));
 app.use("/api/users", require("./routes/users"));
 app.use("/api/admin/coaches/courses", require("./routes/adminCourses"));
+app.use("/api/admin/coaches/revenue", require("./routes/adminRevenue"));
 app.use("/api/admin/coaches", require("./routes/adminCoaches"));
 app.use("/api/coaches", require("./routes/publicCoaches"));
 app.use("/api/courses", require("./routes/courses"));
